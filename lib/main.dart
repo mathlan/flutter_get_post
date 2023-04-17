@@ -84,6 +84,17 @@ class HomePageState extends State<HomePage> {
           );
         },
       ),
+      //? Icone ajout article
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            //? Définition de la route
+            MaterialPageRoute(builder: (context) => const AddPostPage()),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
@@ -104,6 +115,95 @@ class PostDetailPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Text(post.body),
+      ),
+    );
+  }
+}
+
+//? Widget de la page d'ajout d'article (modifiable)
+class AddPostPage extends StatefulWidget {
+  const AddPostPage({Key? key}) : super(key: key);
+
+  @override
+  AddPostPageState createState() => AddPostPageState();
+}
+
+//? Gestion de l'état de la page (State associé au StatefulWidget)
+class AddPostPageState extends State<AddPostPage> {
+  final titleController = TextEditingController();
+  final bodyController = TextEditingController();
+
+//? Même principe que _fetchpost, mais cette fois on encode les input pour les poster
+  Future<void> _addPost() async {
+    final response = await http.post(
+      Uri.parse('https://jsonplaceholder.typicode.com/posts'),
+      body: jsonEncode({
+        //? Les contrôleurs sont définis juste en dessous
+        'title': titleController.text,
+        'body': bodyController.text,
+        //* Par défaut, userId 1 (pas d'utilisateur' co)
+        'userId': 1,
+      }),
+    );
+    //? Retourne le statut en console / 201 pour le POST
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      debugPrint(response.statusCode.toString());
+    }
+  }
+
+//* Build de AddPost
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ajouter un article'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Form(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                //? Definition du controleur
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Titre',
+                ),
+                //? Alerte sur l'absence de contenu
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Merci de remplir ce champs';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8.0),
+              TextFormField(
+                controller: bodyController,
+                decoration: const InputDecoration(
+                  labelText: "Contenu de l'article",
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Merci de remplir ce champs';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16.0),
+              Center(
+                child: ElevatedButton(
+                  //? Envoi onPress
+                  onPressed: () {
+                    _addPost();
+                  },
+                  child: const Text('Soumettre'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
